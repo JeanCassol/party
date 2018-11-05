@@ -1,6 +1,5 @@
 package br.edu.ulbra.election.party.service;
 
-
 import java.lang.reflect.Type;
 import java.util.List;
 
@@ -20,104 +19,86 @@ import br.edu.ulbra.election.party.repository.PartyRepository;
 @Service
 public class PartyService {
 
-    private final PartyRepository partyRepository;
+	private final PartyRepository partyRepository;
 
-    private final ModelMapper modelMapper;
+	private final ModelMapper modelMapper;
 
-    // private final PasswordEncoder passwordEncoder;
+	private static final String MESSAGE_INVALID_ID = "Invalid id";
+	private static final String MESSAGE_PARTY_NOT_FOUND = "Party not found";
 
-    private static final String MESSAGE_INVALID_ID = "Invalid id";
-    private static final String MESSAGE_PARTY_NOT_FOUND = "Party not found";
+	@Autowired
+	public PartyService(PartyRepository partyRepository, ModelMapper modelMapper) {
+		this.partyRepository = partyRepository;
+		this.modelMapper = modelMapper;
+	}
 
-    @Autowired
-    public PartyService(PartyRepository partyRepository, ModelMapper modelMapper){
-        this.partyRepository = partyRepository;
-        this.modelMapper = modelMapper;
-    }
+	public List<PartyOutput> getAll() {
+		Type partyOutputListType = new TypeToken<List<PartyOutput>>() {
+		}.getType();
+		return modelMapper.map(partyRepository.findAll(), partyOutputListType);
+	}
 
-    public List<PartyOutput> getAll(){
-        Type partyOutputListType = new TypeToken<List<PartyOutput>>(){}.getType();
-        return modelMapper.map(partyRepository.findAll(), partyOutputListType);
-    }
+	public PartyOutput create(PartyInput partyInput) {
+		validateInput(partyInput, false);
+		Party party = modelMapper.map(partyInput, Party.class);
+		party = partyRepository.save(party);
+		return modelMapper.map(party, PartyOutput.class);
+	}
 
-    public PartyOutput create(PartyInput partyInput) {
-        validateInput(partyInput, false);
-        Party party = modelMapper.map(partyInput, Party.class);
-       // party.setPassword(passwordEncoder.encode(voter.getPassword()));
-        party = partyRepository.save(party);
-        return modelMapper.map(party, PartyOutput.class);
-    }
+	public PartyOutput getById(Long partyId) {
+		if (partyId == null) {
+			throw new GenericOutputException(MESSAGE_INVALID_ID);
+		}
 
-    public PartyOutput getById(Long partyId){
-        if (partyId == null){
-            throw new GenericOutputException(MESSAGE_INVALID_ID);
-        }
+		Party party = partyRepository.findById(partyId).orElse(null);
+		if (party == null) {
+			throw new GenericOutputException(MESSAGE_PARTY_NOT_FOUND);
+		}
 
-        Party party = partyRepository.findById(partyId).orElse(null);
-        if (party == null){
-            throw new GenericOutputException(MESSAGE_PARTY_NOT_FOUND);
-        }
+		return modelMapper.map(party, PartyOutput.class);
+	}
 
-        return modelMapper.map(party, PartyOutput.class);
-    }
+	public PartyOutput update(Long partyId, PartyInput partyInput) {
+		if (partyId == null) {
+			throw new GenericOutputException(MESSAGE_INVALID_ID);
+		}
+		validateInput(partyInput, true);
 
-    public PartyOutput update(Long partyId, PartyInput partyInput) {
-        if (partyId == null){
-            throw new GenericOutputException(MESSAGE_INVALID_ID);
-        }
-        validateInput(partyInput, true);
+		Party party = partyRepository.findById(partyId).orElse(null);
+		if (party == null) {
+			throw new GenericOutputException(MESSAGE_PARTY_NOT_FOUND);
+		}
 
-        Party party = partyRepository.findById(partyId).orElse(null);
-        if (party == null){
-            throw new GenericOutputException(MESSAGE_PARTY_NOT_FOUND);
-        }
+		party.setName(partyInput.getName());
+		party.setNumber(partyInput.getNumber());
 
-        //voter.setEmail(voterInput.getEmail());
-        party.setName(partyInput.getName());
-        party.setNumber(partyInput.getNumber());
-        /*if (!StringUtils.isBlank(voterInput.getPassword())) {
-            voter.setPassword(passwordEncoder.encode(voterInput.getPassword()));
-        }*/
-        party = partyRepository.save(party);
-        return modelMapper.map(party, PartyOutput.class);
-    }
+		party = partyRepository.save(party);
+		return modelMapper.map(party, PartyOutput.class);
+	}
 
-    public GenericOutput delete(Long partyId) {
-        if (partyId == null){
-            throw new GenericOutputException(MESSAGE_INVALID_ID);
-        }
+	public GenericOutput delete(Long partyId) {
+		if (partyId == null) {
+			throw new GenericOutputException(MESSAGE_INVALID_ID);
+		}
 
-        Party party = partyRepository.findById(partyId).orElse(null);
-        if (party == null){
-            throw new GenericOutputException(MESSAGE_PARTY_NOT_FOUND);
-        }
+		Party party = partyRepository.findById(partyId).orElse(null);
+		if (party == null) {
+			throw new GenericOutputException(MESSAGE_PARTY_NOT_FOUND);
+		}
 
-        partyRepository.delete(party);
+		partyRepository.delete(party);
 
-        return new GenericOutput("Party deleted");
-    }
+		return new GenericOutput("Party deleted");
+	}
 
-    private void validateInput(PartyInput partyInput, boolean isUpdate){
-        /*if (StringUtils.isBlank(partyInput.getEmail())){
-            throw new GenericOutputException("Invalid email");
-        }*/
-        if (StringUtils.isBlank(partyInput.getName())){
-            throw new GenericOutputException("Invalid name");
-        }
-        
-        if (partyInput.getNumber() == 0) {
-        	throw new GenericOutputException("Invalid Number");
-        }
-        
-       /* if (!StringUtils.isBlank(voterInput.getPassword())){
-            if (!voterInput.getPassword().equals(voterInput.getPasswordConfirm())){
-                throw new GenericOutputException("Passwords doesn't match");
-            }
-        } else {
-            if (!isUpdate) {
-                throw new GenericOutputException("Password doesn't match");
-            }
-        }*/
-    }
+	private void validateInput(PartyInput partyInput, boolean isUpdate) {
+		if (StringUtils.isBlank(partyInput.getName())) {
+			throw new GenericOutputException("Invalid name");
+		}
+
+		if (partyInput.getNumber() == 0) {
+			throw new GenericOutputException("Invalid Number");
+		}
+	}
 
 }

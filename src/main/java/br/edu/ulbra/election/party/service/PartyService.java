@@ -1,28 +1,28 @@
 package br.edu.ulbra.election.party.service;
 
 
+import java.lang.reflect.Type;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import br.edu.ulbra.election.party.exception.GenericOutputException;
 import br.edu.ulbra.election.party.input.v1.PartyInput;
 import br.edu.ulbra.election.party.model.Party;
 import br.edu.ulbra.election.party.output.v1.GenericOutput;
 import br.edu.ulbra.election.party.output.v1.PartyOutput;
 import br.edu.ulbra.election.party.repository.PartyRepository;
-import org.apache.commons.lang.StringUtils;
-import org.modelmapper.ModelMapper;
-import org.modelmapper.TypeToken;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import java.lang.reflect.Type;
-import java.util.List;
 
 @Service
 public class PartyService {
 
     private final PartyRepository partyRepository;
 
-    private final PartyMapper partyMapper;
+    private final ModelMapper modelMapper;
 
     // private final PasswordEncoder passwordEncoder;
 
@@ -79,7 +79,7 @@ public class PartyService {
             voter.setPassword(passwordEncoder.encode(voterInput.getPassword()));
         }*/
         party = partyRepository.save(party);
-        return partyMapper.map(party, PartyOutput.class);
+        return modelMapper.map(party, PartyOutput.class);
     }
 
     public GenericOutput delete(Long partyId) {

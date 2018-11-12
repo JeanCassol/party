@@ -8,4 +8,5 @@ import br.edu.ulbra.election.party.model.Party;
 
 public interface PartyRepository extends CrudRepository<Party, Long> {
 	List<Party> findByCode(String code);
+	List<Party> findByNumber(Integer number);
 }

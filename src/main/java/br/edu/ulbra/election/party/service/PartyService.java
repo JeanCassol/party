@@ -25,7 +25,10 @@ public class PartyService {
 
 	private static final String MESSAGE_INVALID_ID = "Invalid id";
 	private static final String MESSAGE_PARTY_NOT_FOUND = "Party not found";
-
+	private static final String MESSAGE_PARTY_NUMBER_FOUND = "Party with same number found";
+	private static final String MESSAGE_PARTY_CODE_FOUND = "Party with same code found";
+	private static final String MESSAGE_PARTY_NUMBER_DIGITS = "The number must have two digits";
+	
 	@Autowired
 	public PartyService(PartyRepository partyRepository, ModelMapper modelMapper) {
 		this.partyRepository = partyRepository;
@@ -98,6 +101,20 @@ public class PartyService {
 
 		if (partyInput.getNumber() == 0) {
 			throw new GenericOutputException("Invalid Number");
+		}
+		
+		if ((partyInput.getNumber().toString().length()) != 2) {
+            throw new GenericOutputException(MESSAGE_PARTY_NUMBER_DIGITS);
+        }
+		
+		List<Party> partyCodeList = partyRepository.findByCode(partyInput.getCode());
+		if (partyCodeList.size() > 0) {
+			throw new GenericOutputException(MESSAGE_PARTY_CODE_FOUND);
+		}
+		
+		List<Party> partyNumberList = partyRepository.findByNumber(partyInput.getNumber());
+		if (partyNumberList.size() > 0) {
+			throw new GenericOutputException(MESSAGE_PARTY_NUMBER_FOUND);
 		}
 	}
 

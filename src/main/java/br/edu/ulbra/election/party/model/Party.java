@@ -21,6 +21,9 @@ public class Party {
 	@Column(nullable = false, length = 255, name = "name")
 	private String name;
 
+	@Column(nullable = false)
+	private Integer number;
+
 	public Long getId() {
 		return id;
 	}
@@ -28,9 +31,6 @@ public class Party {
 	public void setId(Long id) {
 		this.id = id;
 	}
-
-	@Column(nullable = false)
-	private Integer number;
 
 	public Long getCode() {
 		return code;

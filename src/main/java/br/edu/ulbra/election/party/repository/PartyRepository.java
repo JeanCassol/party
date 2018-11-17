@@ -1,12 +1,10 @@
 package br.edu.ulbra.election.party.repository;
 
-import java.util.List;
-
+import br.edu.ulbra.election.party.model.Party;
 import org.springframework.data.repository.CrudRepository;
 
-import br.edu.ulbra.election.party.model.Party;
-
 public interface PartyRepository extends CrudRepository<Party, Long> {
-	List<Party> findByCode(String code);
-	List<Party> findByNumber(Integer number);
+
+    Party findFirstByCode(String code);
+    Party findFirstByNumber(Integer number);
 }

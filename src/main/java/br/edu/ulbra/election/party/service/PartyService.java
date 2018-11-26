@@ -1,18 +1,21 @@
 package br.edu.ulbra.election.party.service;
 
-import br.edu.ulbra.election.party.exception.GenericOutputException;
-import br.edu.ulbra.election.party.input.v1.PartyInput;
-import br.edu.ulbra.election.party.model.Party;
-import br.edu.ulbra.election.party.output.v1.GenericOutput;
-import br.edu.ulbra.election.party.output.v1.PartyOutput;
-import br.edu.ulbra.election.party.repository.PartyRepository;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.apache.commons.lang.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import br.edu.ulbra.election.party.client.CandidateClientService;
+import br.edu.ulbra.election.party.exception.GenericOutputException;
+import br.edu.ulbra.election.party.input.v1.PartyInput;
+import br.edu.ulbra.election.party.model.Party;
+import br.edu.ulbra.election.party.output.v1.CandidateOutput;
+import br.edu.ulbra.election.party.output.v1.GenericOutput;
+import br.edu.ulbra.election.party.output.v1.PartyOutput;
+import br.edu.ulbra.election.party.repository.PartyRepository;
 
 @Service
 public class PartyService {
@@ -20,14 +23,16 @@ public class PartyService {
     private final PartyRepository partyRepository;
 
     private final ModelMapper modelMapper;
-
+    private final CandidateClientService candidateClientService;
+    
     private static final String MESSAGE_INVALID_ID = "Invalid id";
     private static final String MESSAGE_PARTY_NOT_FOUND = "Party not found";
 
     @Autowired
-    public PartyService(PartyRepository partyRepository, ModelMapper modelMapper){
+    public PartyService(PartyRepository partyRepository, ModelMapper modelMapper, CandidateClientService candidateClientService){
         this.partyRepository = partyRepository;
         this.modelMapper = modelMapper;
+        this.candidateClientService = candidateClientService;
     }
 
     public List<PartyOutput> getAll(){
@@ -62,7 +67,8 @@ public class PartyService {
         }
         validateInput(partyInput);
         validateDuplicate(partyInput, partyId);
-
+        validateReference(partyId);
+        
         Party party = partyRepository.findById(partyId).orElse(null);
         if (party == null){
             throw new GenericOutputException(MESSAGE_PARTY_NOT_FOUND);
@@ -79,17 +85,29 @@ public class PartyService {
         if (partyId == null){
             throw new GenericOutputException(MESSAGE_INVALID_ID);
         }
-
+        validateReference(partyId);
         Party party = partyRepository.findById(partyId).orElse(null);
         if (party == null){
             throw new GenericOutputException(MESSAGE_PARTY_NOT_FOUND);
         }
 
+        CandidateOutput candidateOutput = candidateClientService.getByIdParty(partyId);
+		if (candidateOutput != null) {
+			throw new GenericOutputException("Party with candidates");
+		}
+        
         partyRepository.delete(party);
 
         return new GenericOutput("Party deleted");
     }
-
+    
+    private void validateReference(Long partyId) {
+		CandidateOutput candidateOutput = candidateClientService.getByIdParty(partyId);
+		if (candidateOutput != null) {
+			throw new GenericOutputException("Party with Candidate");
+		}
+	}
+    
     private void validateDuplicate(PartyInput partyInput, Long id){
         Party party = partyRepository.findFirstByCode(partyInput.getCode());
         if (party != null && !party.getId().equals(id)){
